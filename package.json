@@ -1,6 +1,6 @@
 {
   "name": "@omnicoreos/planka-mcp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A Planka 2.x MCP server with verified writes and an optional agent workflow",
   "type": "module",
   "main": "dist/index.js",

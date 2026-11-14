@@ -4,6 +4,19 @@ All notable changes to this project are documented here.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-11-14
+
+### Added
+
+- `PLANKA_GET_CARD_COMMENTS` (`all` or a number): what `planka_get_card` reads
+  when the call does not pass `withComments`. Opt-in — unset, nothing changes
+  and the digest still carries no comments. An explicit `withComments`, `0`
+  included, always wins. When the variable is set, the tool description, the
+  `withComments` parameter text and the server `instructions` state the
+  configured default instead of "NO comments unless asked". A value that is
+  neither `all` nor a whole number is a configuration error. Suite: 296 → 304
+  tests.
+
 ## [0.3.0] - 2026-09-03
 
 ### Highlights

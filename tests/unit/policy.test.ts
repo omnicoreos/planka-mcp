@@ -29,7 +29,21 @@ describe("parsePolicy", () => {
       protectedListIds: [],
       summaryHighlightLabel: null,
       summaryDecisionLists: null,
+      getCardComments: null,
     });
+  });
+
+  it("reads the get_card comment default, and refuses a value it cannot use", () => {
+    const read = (value: string) =>
+      parsePolicy({ PLANKA_GET_CARD_COMMENTS: value }).getCardComments;
+    expect(read(" ALL ")).toBe("all");
+    expect(read("20")).toBe(20);
+    // 0 and blank are the package default, said out loud.
+    expect(read("0")).toBeNull();
+    expect(read("  ")).toBeNull();
+    for (const bad of ["yes", "-1", "2.5", "all,10"]) {
+      expect(() => read(bad)).toThrow(/Invalid PLANKA_GET_CARD_COMMENTS/);
+    }
   });
 
   it("reads the board summary vocabulary from the environment", () => {

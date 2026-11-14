@@ -25,7 +25,11 @@ import {
   writeResult,
 } from "../operations/verify.js";
 import { PlankaError } from "../errors.js";
-import { assertListWritable, getPolicy } from "../config/policy.js";
+import {
+  AccessPolicy,
+  assertListWritable,
+  getPolicy,
+} from "../config/policy.js";
 
 /**
  * PLANKA_PROTECTED_LIST_IDS has to protect a column's CONTENT, not just the
@@ -329,6 +333,30 @@ function customFieldsOf(details: CardLightDetails) {
 }
 
 /**
+ * How planka_get_card is advertised when PLANKA_GET_CARD_COMMENTS changes its
+ * default. `null` = the variable is unset and the static text below is true.
+ */
+export function getCardCommentsPresentation(
+  policy: AccessPolicy = getPolicy()
+): { description: string; withComments: string } | null {
+  const configured = policy.getCardComments;
+  if (configured === null) return null;
+  const what =
+    configured === "all"
+      ? "ALL comments"
+      : `the ${configured} most recent comments`;
+  return {
+    description:
+      "One card as a digest: name, column, labels, members, checklist counts, attachment and comment counts, and the first 200 chars of the description. " +
+      `On this server ${what} are included by default (PLANKA_GET_CARD_COMMENTS) — pass withComments (0 for none, a number, or "all") to override. ` +
+      'detail:"full" adds the whole description, every task item, the attachment list and the custom fields.',
+    withComments: `Comments to include: 0 for none, a number for the N most recent, or "all" to page through every comment. Default on this server: ${
+      configured === "all" ? '"all"' : configured
+    }.`,
+  };
+}
+
+/**
  * Tool: planka_get_card
  * A digest by default; the full record only when asked for.
  */
@@ -372,10 +400,16 @@ export const getCardTool = {
   }) => {
     try {
       const full = params.detail === "full";
-      const wantAll = params.withComments === "all";
+      // An explicit withComments — 0 included — always wins. Only a call that
+      // does not say falls back to PLANKA_GET_CARD_COMMENTS.
+      const requested =
+        params.withComments === undefined || params.withComments === null
+          ? getPolicy().getCardComments
+          : params.withComments;
+      const wantAll = requested === "all";
       const wantN =
-        typeof params.withComments === "number"
-          ? Math.max(0, Math.floor(params.withComments))
+        typeof requested === "number"
+          ? Math.max(0, Math.floor(requested))
           : 0;
       const wantComments = wantAll || wantN > 0;
 

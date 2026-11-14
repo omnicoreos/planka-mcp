@@ -17,12 +17,12 @@
     "url": "https://github.com/omnicoreos/planka-mcp",
     "source": "github"
   },
-  "version": "0.3.0",
+  "version": "0.3.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@omnicoreos/planka-mcp",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "transport": {
         "type": "stdio"
       },
@@ -114,6 +114,13 @@
         {
           "name": "PLANKA_SUMMARY_DECISION_LISTS",
           "description": "Comma-separated columns planka_board_summary returns cards from when the call does not say",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false
+        },
+        {
+          "name": "PLANKA_GET_CARD_COMMENTS",
+          "description": "Comments planka_get_card reads when the call omits withComments: all, or a number. Unset: none",
           "isRequired": false,
           "format": "string",
           "isSecret": false

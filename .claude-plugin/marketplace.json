@@ -10,7 +10,7 @@
       "name": "planka",
       "source": "./",
       "description": "Planka 2.x kanban over MCP, with the optional board workflow as skills.",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "displayName": "Planka",
       "homepage": "https://github.com/omnicoreos/planka-mcp#readme",
       "repository": "https://github.com/omnicoreos/planka-mcp",

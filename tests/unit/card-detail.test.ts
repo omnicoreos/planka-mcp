@@ -19,6 +19,12 @@ import {
   COMMENTS_PAGE_SIZE,
 } from "../../src/operations/comments.js";
 import { clearBoardNamesCache } from "../../src/operations/cards.js";
+import { parsePolicy, resetPolicyCache } from "../../src/config/policy.js";
+import { getToolDefinitions } from "../../src/tools/index.js";
+import {
+  SERVER_INSTRUCTIONS,
+  buildServerInstructions,
+} from "../../src/instructions.js";
 
 const ts = { createdAt: "2026-01-01T00:00:00.000Z", updatedAt: null };
 const LONG_DESCRIPTION = "x".repeat(900);
@@ -326,5 +332,115 @@ describe("get_comments tool", () => {
     expect(body.truncated).toBe(true);
     expect(body.truncatedReason).toMatch(/beforeId/);
     expect(body.hasMore).toBe(true);
+  });
+});
+
+describe("PLANKA_GET_CARD_COMMENTS", () => {
+  const withEnv = async (value: string, run: () => Promise<void>) => {
+    process.env.PLANKA_GET_CARD_COMMENTS = value;
+    resetPolicyCache();
+    try {
+      await run();
+    } finally {
+      delete process.env.PLANKA_GET_CARD_COMMENTS;
+      resetPolicyCache();
+    }
+  };
+  const commentPaths = () =>
+    mocks.get.mock.calls
+      .map((c) => c[0] as string)
+      .filter((p) => p.includes("/comments"));
+
+  it("returns every comment when the call does not pass withComments", async () => {
+    routeGet();
+    await withEnv("all", async () => {
+      const body = payload(await getCardTool.handler({ cardId: "card-1" }));
+      expect(body.detail).toBe("digest");
+      expect(body.comments.map((c: { text: string }) => c.text)).toEqual([
+        "comment 1",
+        "comment 2",
+        "comment 3",
+      ]);
+      expect(body.commentsReturned).toBe(3);
+    });
+  });
+
+  it("returns the N most recent comments when set to a number", async () => {
+    routeGet();
+    await withEnv("2", async () => {
+      const body = payload(await getCardTool.handler({ cardId: "card-1" }));
+      expect(body.commentsReturned).toBe(2);
+      expect(body.comments.map((c: { text: string }) => c.text)).toEqual([
+        "comment 2",
+        "comment 3",
+      ]);
+    });
+  });
+
+  it("lets an explicit withComments win, 0 included", async () => {
+    routeGet();
+    await withEnv("all", async () => {
+      const none = payload(
+        await getCardTool.handler({ cardId: "card-1", withComments: 0 })
+      );
+      expect(Array.isArray(none.comments)).toBe(false);
+      expect(commentPaths()).toHaveLength(0);
+
+      routeGet(() => commentsBody(3, 1));
+      const one = payload(
+        await getCardTool.handler({ cardId: "card-1", withComments: 1 })
+      );
+      expect(one.commentsReturned).toBe(1);
+    });
+  });
+
+  it("changes nothing when unset", async () => {
+    routeGet();
+    resetPolicyCache();
+    const body = payload(await getCardTool.handler({ cardId: "card-1" }));
+    expect(Array.isArray(body.comments)).toBe(false);
+    expect(commentPaths()).toHaveLength(0);
+  });
+
+  it("advertises the configured default instead of 'NOT included'", () => {
+    const describe_ = (env: NodeJS.ProcessEnv) => {
+      const tool = getToolDefinitions(parsePolicy(env)).find(
+        (t) => t.name === "planka_get_card"
+      )!;
+      const props = tool.inputSchema.properties as Record<
+        string,
+        { description?: string; anyOf?: unknown }
+      >;
+      return { description: tool.description, withComments: props.withComments };
+    };
+
+    const unset = describe_({});
+    expect(unset.description).toBe(getCardTool.description);
+    expect(unset.description).toMatch(/NOT included by default/);
+
+    const all = describe_({ PLANKA_GET_CARD_COMMENTS: "all" });
+    expect(all.description).not.toMatch(/NOT included/);
+    expect(all.description).toMatch(/ALL comments are included by default/);
+    expect(all.withComments.description).toMatch(/Default on this server: "all"/);
+    // Only the text changes: the accepted values are the same.
+    expect(all.withComments.anyOf).toEqual(unset.withComments.anyOf);
+
+    const five = describe_({ PLANKA_GET_CARD_COMMENTS: "5" });
+    expect(five.description).toMatch(/the 5 most recent comments are included/);
+  });
+
+  it("rewrites the instructions only when set", () => {
+    expect(buildServerInstructions(null)).toBe(SERVER_INSTRUCTIONS);
+    expect(SERVER_INSTRUCTIONS).toMatch(/NO comments unless asked/);
+
+    const all = buildServerInstructions("all");
+    expect(all).not.toMatch(/NO comments unless asked/);
+    expect(all).toMatch(/already returns ALL comments by default/);
+    expect(all.length).toBeLessThanOrEqual(2500);
+
+    const five = buildServerInstructions(5);
+    expect(five).not.toMatch(/NO comments unless asked/);
+    expect(five).toMatch(/only the 5 most recent comments by default/);
+    expect(five.length).toBeLessThanOrEqual(2500);
   });
 });

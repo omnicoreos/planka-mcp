@@ -238,6 +238,7 @@ Layer 3 stays true even if this package is pinned back to an older version.
 | `PLANKA_PROTECTED_LIST_IDS` | comma-separated list ids | Refuses creating or moving cards **into** those lists, editing or deleting the lists themselves, and moving, archiving or deleting the cards **out of** them |
 | `PLANKA_SUMMARY_DECISION_LISTS` | comma-separated column names or ids | Which columns `planka_board_summary` returns cards from when the call does not say. Unset: it returns no cards, only the shape of the board |
 | `PLANKA_SUMMARY_HIGHLIGHT_LABEL` | one label name | The label that marks a card as unblocked in `planka_board_summary`. Unset: nothing is highlighted |
+| `PLANKA_GET_CARD_COMMENTS` | `all` or a number | What `planka_get_card` reads when the call does not pass `withComments`: every comment, or the N most recent. An explicit `withComments` (`0` included) still wins. Unset: no comments unless asked. Set it when your agents must read a card's comments before acting on it — it turns a rule they can forget into the default |
 | `PLANKA_MCP_PREFLIGHT` | `full` | Read by the plugin's SessionStart hook only: also spawn the server binary and wait for its stdio banner. Off by default, because on a cold cache it costs an `npx` download |
 | `PLANKA_MCP_COMMAND` | a command | Read by the same hook: the command to spawn instead of `npx -y @omnicoreos/planka-mcp` (a local checkout, a pinned binary) |
 

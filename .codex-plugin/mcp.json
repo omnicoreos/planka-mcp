@@ -4,7 +4,7 @@
       "command": "npx",
       "args": [
         "-y",
-        "@omnicoreos/planka-mcp@0.3.0"
+        "@omnicoreos/planka-mcp@0.3.1"
       ],
       "env": {
         "PLANKA_BASE_URL": "${PLANKA_BASE_URL}",

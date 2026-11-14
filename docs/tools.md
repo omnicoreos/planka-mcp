@@ -385,7 +385,7 @@ and `descriptionTruncated`).
 | Parameter | Default | What it does |
 |---|---|---|
 | `detail` | `"digest"` | `"full"` adds the whole description, every task item, the attachment list and the custom field values |
-| `withComments` | `0` | A number returns the N most recent comments; `"all"` pages through every one of them |
+| `withComments` | `0`, or `PLANKA_GET_CARD_COMMENTS` | A number returns the N most recent comments; `"all"` pages through every one of them |
 | `descriptionChars` | `200` | Size of the description preview (max 2000). Ignored when `detail` is `"full"` |
 
 ```json
@@ -395,6 +395,11 @@ and `descriptionTruncated`).
   "withComments": 10
 }
 ```
+
+A deployment can change that default with `PLANKA_GET_CARD_COMMENTS` (`all` or a
+number): a call that does not pass `withComments` then reads that many, the
+tool description and the server `instructions` say so, and an explicit
+`withComments` — `0` included — still wins.
 
 Comments are **off by default**: they are the biggest and most variable part of
 a card, and most reads do not need them. When they are requested they come back

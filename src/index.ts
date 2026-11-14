@@ -32,9 +32,22 @@ import {
   isZodError,
 } from "./errors.js";
 import { SERVER_NAME, SERVER_VERSION } from "./identity.generated.js";
-import { SERVER_INSTRUCTIONS } from "./instructions.js";
+import { buildServerInstructions } from "./instructions.js";
 import { listResources, readResource } from "./resources.js";
 import { getPrompt, listPrompts } from "./prompts.js";
+import { getPolicy } from "./config/policy.js";
+
+/**
+ * PLANKA_GET_CARD_COMMENTS for the handshake. A broken policy must not stop
+ * the server from starting: the tool call that hits it reports the error.
+ */
+function getCardCommentsDefault(): number | "all" | null {
+  try {
+    return getPolicy().getCardComments;
+  } catch {
+    return null;
+  }
+}
 
 /** Standard error response back to the model. */
 function errorResult(text: string) {
@@ -64,7 +77,7 @@ async function main() {
       },
       // Sent back in the initialize handshake. Claude Code puts it in the system
       // prompt, Codex reads it alongside the tool list.
-      instructions: SERVER_INSTRUCTIONS,
+      instructions: buildServerInstructions(getCardCommentsDefault()),
     }
   );
 

@@ -3,7 +3,7 @@ name: planka-orchestrator
 description: This skill should be used when the user asks to "orchestrate the Planka board", "run cards in parallel", "act as the director", "dispatch workers from Planka", or "continue the board workflow". It coordinates cards, comments, worktrees, worker ownership, evidence, and safe merges without editing repository files in the director role.
 license: MIT
 metadata:
-  version: 0.3.0
+  version: 0.3.1
 ---
 
 # Planka workflow orchestrator

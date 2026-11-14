@@ -2,7 +2,7 @@
  * Tool registry for PLANKA MCP server.
  */
 import { navigationTools } from "./navigation.js";
-import { cardTools } from "./cards.js";
+import { cardTools, getCardCommentsPresentation } from "./cards.js";
 import { taskTools } from "./tasks.js";
 import { labelTools } from "./labels.js";
 import { commentTools } from "./comments.js";
@@ -196,6 +196,22 @@ export function effectiveInputSchema(
     : tool.inputSchema;
 }
 
+/** A copy of the schema with one property's description replaced. */
+function withPropertyDescription(
+  schema: Tool["inputSchema"],
+  property: string,
+  description: string
+): Tool["inputSchema"] {
+  const properties = (schema.properties ?? {}) as Record<string, object>;
+  return {
+    ...schema,
+    properties: {
+      ...properties,
+      [property]: { ...properties[property], description },
+    },
+  };
+}
+
 /**
  * Get all tool definitions (for MCP listTools), after the access policy:
  * read-only and disabled tools are not advertised at all.
@@ -211,11 +227,24 @@ export function getToolDefinitions(policy: AccessPolicy = getPolicy()) {
       // Annotations live in their own map; forgetting to spread them here is how
       // they get silently dropped from tools/list.
       const presentation = toolPresentation[tool.name];
+      const inputSchema = effectiveInputSchema(tool, policy);
+      // PLANKA_GET_CARD_COMMENTS changes what get_card does when the call does
+      // not say; the advertised text has to change with it.
+      const getCardComments =
+        tool.name === "planka_get_card"
+          ? getCardCommentsPresentation(policy)
+          : null;
       return {
         name: tool.name,
         ...(presentation ? { title: presentation.title } : {}),
-        description: tool.description,
-        inputSchema: effectiveInputSchema(tool, policy),
+        description: getCardComments?.description ?? tool.description,
+        inputSchema: getCardComments
+          ? withPropertyDescription(
+              inputSchema,
+              "withComments",
+              getCardComments.withComments
+            )
+          : inputSchema,
         ...(presentation ? { annotations: presentation.annotations } : {}),
         ...(presentation?._meta ? { _meta: presentation._meta } : {}),
       };

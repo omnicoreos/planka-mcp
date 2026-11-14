@@ -237,6 +237,7 @@ una versión vieja.
 | `PLANKA_PROTECTED_LIST_IDS` | list ids separados por coma | Rechaza crear o mover cards **hacia** esas listas, editar o borrar las listas mismas, y mover, archivar o borrar las cards **hacia afuera** de ellas |
 | `PLANKA_SUMMARY_DECISION_LISTS` | nombres o ids de columna separados por coma | De qué columnas trae cards `planka_board_summary` cuando la llamada no lo dice. Sin setear: no devuelve cards, sólo la forma del board |
 | `PLANKA_SUMMARY_HIGHLIGHT_LABEL` | un nombre de label | El label que marca una card como desbloqueada en `planka_board_summary`. Sin setear: no se resalta nada |
+| `PLANKA_GET_CARD_COMMENTS` | `all` o un número | Qué lee `planka_get_card` cuando la llamada no pasa `withComments`: todos los comentarios, o los N más recientes. Un `withComments` explícito (incluido `0`) sigue ganando. Sin setear: sin comentarios salvo que se pidan. Sirve cuando tus agentes deben leer los comentarios de una card antes de actuar: convierte una regla que se puede olvidar en el default |
 | `PLANKA_MCP_PREFLIGHT` | `full` | La lee sólo el hook SessionStart del plugin: además levanta el binario del server y espera su banner de stdio. Apagado por default, porque con caché fría cuesta una descarga de `npx` |
 | `PLANKA_MCP_COMMAND` | un comando | La lee el mismo hook: el comando a levantar en lugar de `npx -y @omnicoreos/planka-mcp` (un checkout local, un binario pineado) |
 

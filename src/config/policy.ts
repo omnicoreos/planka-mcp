@@ -40,6 +40,12 @@ export interface AccessPolicy {
    * say. `null` = none: the summary answers columns and labels only.
    */
   summaryDecisionLists: string[] | null;
+  /**
+   * What `planka_get_card` reads when the call does not pass `withComments`:
+   * a number for the N most recent comments, `"all"` for every one. `null` =
+   * none, the package default. An explicit `withComments` always wins.
+   */
+  getCardComments: number | "all" | null;
 }
 
 /**
@@ -119,6 +125,23 @@ function parseNonEmptyCsv(
   return entries;
 }
 
+/**
+ * PLANKA_GET_CARD_COMMENTS: "all" or a whole number. Unset, blank and 0 all
+ * mean "no comments unless asked", so they collapse to null.
+ */
+function parseGetCardComments(raw: string | undefined): number | "all" | null {
+  const value = raw?.trim().toLowerCase();
+  if (!value) return null;
+  if (value === "all") return "all";
+  if (/^\d+$/.test(value)) {
+    const count = Number.parseInt(value, 10);
+    return count > 0 ? count : null;
+  }
+  throw new PlankaConfigError(
+    `Invalid PLANKA_GET_CARD_COMMENTS: "${raw}". Use "all" or a whole number of comments (0 or unset = none).`
+  );
+}
+
 const TRUTHY = new Set(["true", "1"]);
 const FALSY = new Set(["false", "0", ""]);
 
@@ -191,6 +214,7 @@ export function parsePolicy(env: NodeJS.ProcessEnv): AccessPolicy {
       "PLANKA_SUMMARY_DECISION_LISTS",
       env.PLANKA_SUMMARY_DECISION_LISTS
     ),
+    getCardComments: parseGetCardComments(env.PLANKA_GET_CARD_COMMENTS),
   };
 }
 
